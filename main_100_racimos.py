@@ -1,21 +1,23 @@
 import main
 import os
 import time
+
 def make_dir(path, name):
     if not os.path.isdir(path+name):
         os.mkdir(path+name)
 
 videos_root = 'F:/Documentos/Dharma/captura_2_2023/capturas/'
-videos_root = None
+# videos_root = None
 input_root = 'F:/Documentos/Dharma/captura_2_2023/detections/'
-output_root = 'F:/Documentos/Dharma/captura_2_2023/tracked/'
-path_directory_list =['180/','freestyle/', 'verticales/']
+output_root = 'F:/Documentos/Dharma/captura_2_2023/tracked_2/'
+path_directory_list =['verticales/', '180/', 'freestyle'] #, , 'verticales/'
 
 class Args:
     def __init__(self):
-        self.draw_tracking = False
-        self.draw_circles = False
+        self.draw_tracking = True
+        self.draw_circles = True
         self.radius = 12
+        self.memory_length = 1
 args = Args()
 
 for directory in path_directory_list:
@@ -36,7 +38,6 @@ for directory in path_directory_list:
             ini = time.time()
             args.input = input_path + jsf[:-1]
             args.video_path = None
-            make_dir(output_root+directory, jsf[:-5])
             args.output = output_root+directory+jsf[:-6]
             main.main(args)
             end = time.time()
