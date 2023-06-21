@@ -20,6 +20,7 @@ class Tracker:
         self.id_ctr = 0
         self.args = args
         self.radius = args.radius
+        self.no_matched_detections = dict()
         if args.video_path is not None:
             self.vs = cv2.VideoCapture(args.video_path)
         if args.memory_length:
@@ -72,12 +73,19 @@ class Tracker:
 
             if icp.fitness >= 0.8: #interpolo solo si el matcheo entre frames fue satisfactorio
                 # interpolation of not matched points
-                no_matched_ids = self.check_no_matched_ids(previous_len, correspondence_set)
-                no_matched_detections = {key: value for key, value in self.previous.items() if int(key) in no_matched_ids}
+                no_matched_idx = self.check_no_matched_idx(previous_len, correspondence_set)
+
+                idx_aux = 0
+                for key, value in self.previous.items():
+                    if int(key) in no_matched_idx:
+                        value.append(self.previous_ids_dict[int(key)])
+                        self.no_matched_detections[idx_aux+current_len] = value
+                        idx_aux += 1
+                # self.no_matched_detections = {idx+current_len: value for idx, (key, value) in enumerate(self.previous.items()) if int(key) in no_matched_ids}
                 # if no_matched_detections:
                 if not transformation_changed:
                     self.x, self.y = 0, 0
-                no_matched_cloud = self.to_cloud(no_matched_detections, self.x, self.y)
+                no_matched_cloud = self.to_cloud(self.no_matched_detections, self.x, self.y)
                 no_matched_cloud.transform(icp.transformation)
 
                     # previous_copy_cloud = self.to_cloud(self.previous, self.x, self.y)
@@ -103,7 +111,7 @@ class Tracker:
             self.previous = current
             self.previous_cloud_extended = no_matched_cloud
 
-    def check_no_matched_ids(self, previous_len, correspondence_set):
+    def check_no_matched_idx(self, previous_len, correspondence_set):
         prev_idx = list(range(previous_len))
         previous_matched = correspondence_set[:,0]
         not_matched_points = []
@@ -194,7 +202,7 @@ class Tracker:
 
         # print(real_prev_matches)
         # print( 'ipm: ', interpolated_prev_matches)
-        print(np.asarray(self.previous_cloud_extended.points))
+        # print(np.asarray(self.previous_cloud_extended.points))
         current_matched = correspondence_set[:,1]
         real_current_matched = correspondence_set[real_prev_matches_idx, 1]
         interpolated_current_matched = correspondence_set[interpolated_prev_matches_idx, 1]
